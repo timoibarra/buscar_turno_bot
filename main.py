@@ -3,7 +3,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import time
 import telegram
-import datetime
 
 # CONFIG
 URL = "https://www.citaconsular.es/es/hosteds/widgetdefault/24dc3ade850068f20d7c19845f023121c"
@@ -20,27 +19,32 @@ options.add_argument("--disable-dev-shm-usage")
 driver = webdriver.Chrome(options=options)
 
 try:
+    print("🟡 Abriendo sitio...")
     driver.get(URL)
     time.sleep(3)
 
+    print("🟡 Aceptando alerta...")
     alert = driver.switch_to.alert
     alert.accept()
     time.sleep(2)
 
+    print("🟡 Haciendo clic en Continuar...")
     continuar = driver.find_element(By.ID, "idCaptchaButton")
     continuar.click()
     time.sleep(5)
 
-    # Notificación de ejecución
-    now = datetime.datetime.now().strftime("%H:%M:%S")
-    bot.send_message(chat_id=CHAT_ID, text=f"🔁 Bot ejecutado a las {now}. Revisando turnos...")
+    print("🟢 Enviando mensaje: bot funcionando.")
+    bot.send_message(chat_id=CHAT_ID, text="🔁 Bot ejecutado correctamente. Revisando turnos...")
 
-    # Aviso si hay turnos disponibles
     if "No hay horas disponibles" not in driver.page_source:
-        bot.send_message(chat_id=CHAT_ID, text=f"✅ ¡Turno disponible! Revisá: {URL}")
+        print("🟢 ¡Turnos disponibles!")
+        bot.send_message(chat_id=CHAT_ID, text="✅ ¡Turno disponible! Revisá: " + URL)
+    else:
+        print("🔒 No hay turnos disponibles.")
 
 except Exception as e:
-    bot.send_message(chat_id=CHAT_ID, text="⚠️ Error al revisar turnos:\n" + str(e))
+    print("🔴 Error:", str(e))
+    bot.send_message(chat_id=CHAT_ID, text="⚠️ Error al revisar turnos: " + str(e))
 
 finally:
     driver.quit()
