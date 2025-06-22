@@ -1,17 +1,15 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import time
-import telegram
+import telepot
 
 # CONFIG
 URL = "https://www.citaconsular.es/es/hosteds/widgetdefault/24dc3ade850068f20d7c19845f023121c"
 BOT_TOKEN = "7802510567:AAHcOAeQW53YJE_yWJMkcUURjBn6C9E3JfU"
 CHAT_ID = "7619836951"
 
-bot = telegram.Bot(token=BOT_TOKEN)
+bot = telepot.Bot(BOT_TOKEN)
 
 options = Options()
 options.add_argument("--headless")
@@ -28,23 +26,19 @@ try:
     print("🟡 Aceptando alerta...")
     alert = driver.switch_to.alert
     alert.accept()
+    time.sleep(2)
 
-    print("🟡 Esperando el botón de continuar...")
-    continuar = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.ID, "idCaptchaButton"))
-    )
+    continuar = driver.find_element(By.ID, "idCaptchaButton")
     continuar.click()
     time.sleep(5)
 
-    # Notificación de funcionamiento
-    bot.send_message(chat_id=CHAT_ID, text="🔁 Bot ejecutado correctamente. Revisando turnos...")
+    bot.sendMessage(CHAT_ID, "🔁 Bot ejecutado correctamente. Revisando turnos...")
 
-    # Si hay turnos disponibles
     if "No hay horas disponibles" not in driver.page_source:
-        bot.send_message(chat_id=CHAT_ID, text="✅ ¡Turno disponible! Revisá: " + URL)
+        bot.sendMessage(CHAT_ID, "✅ ¡Turno disponible! Revisá: " + URL)
 
 except Exception as e:
-    bot.send_message(chat_id=CHAT_ID, text="⚠️ Error al revisar turnos: " + str(e))
+    bot.sendMessage(CHAT_ID, "⚠️ Error al revisar turnos: " + str(e))
 
 finally:
     driver.quit()
