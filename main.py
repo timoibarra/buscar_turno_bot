@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 import telegram
@@ -20,13 +21,13 @@ options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 async def main():
     try:
         print("🟡 Abriendo sitio...")
         driver.get(URL)
-        time.sleep(2)  # dejar que cargue el modal
+        time.sleep(2)
 
         print("🟡 Esperando botón de continuar...")
         WebDriverWait(driver, 10).until(
@@ -37,7 +38,7 @@ async def main():
         continuar.click()
         print("🟢 Botón clickeado")
 
-        time.sleep(5)  # esperar que cargue siguiente pantalla
+        time.sleep(5)
 
         await bot.send_message(chat_id=CHAT_ID, text="🔁 Bot ejecutado correctamente. Revisando turnos...")
 
