@@ -2,22 +2,24 @@ name: Buscar Turno Bot
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/30 * * * *"    # Ejecutar cada 30 minutos
+  workflow_dispatch:           # Permite ejecución manual desde GitHub
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - name: Clonar el repositorio
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-    - name: Install dependencies
-      run: pip install -r requirements.txt
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
 
-    - name: Run bot
-      run: python main.py
+      - name: Ejecutar bot
+        run: python main.py
