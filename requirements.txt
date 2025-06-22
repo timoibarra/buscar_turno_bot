@@ -1,2 +1,2 @@
-python-telegram-bot==20.3
-selenium
+selenium==4.21.0
+telepot==12.7
