@@ -1,48 +1,43 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.common.exceptions import NoAlertPresentException, NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-import asyncio
-from telegram import Bot
 import time
+import telegram
+import asyncio
 
 # CONFIG
 URL = "https://www.citaconsular.es/es/hosteds/widgetdefault/24dc3ade850068f20d7c19845f023121c"
 BOT_TOKEN = "7802510567:AAHcOAeQW53YJE_yWJMkcUURjBn6C9E3JfU"
 CHAT_ID = "7619836951"
 
-bot = Bot(token=BOT_TOKEN)
+bot = telegram.Bot(token=BOT_TOKEN)
 
 options = Options()
 options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
+driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
 
 async def main():
     try:
         print("🟡 Abriendo sitio...")
         driver.get(URL)
-        time.sleep(3)
+        time.sleep(2)  # dejar que cargue el modal
 
-        try:
-            print("🟡 Aceptando alerta...")
-            alert = driver.switch_to.alert
-            alert.accept()
-            time.sleep(2)
-        except NoAlertPresentException:
-            print("🔘 No hay alerta para aceptar")
+        print("🟡 Esperando botón de continuar...")
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "idCaptchaButton"))
+        )
 
-        try:
-            continuar = driver.find_element(By.ID, "idCaptchaButton")
-            continuar.click()
-            time.sleep(5)
-        except NoSuchElementException:
-            await bot.send_message(chat_id=CHAT_ID, text="⚠️ No se encontró el botón de continuar (idCaptchaButton)")
-            return
+        continuar = driver.find_element(By.ID, "idCaptchaButton")
+        continuar.click()
+        print("🟢 Botón clickeado")
+
+        time.sleep(5)  # esperar que cargue siguiente pantalla
 
         await bot.send_message(chat_id=CHAT_ID, text="🔁 Bot ejecutado correctamente. Revisando turnos...")
 
@@ -50,6 +45,7 @@ async def main():
             await bot.send_message(chat_id=CHAT_ID, text="✅ ¡Turno disponible! Revisá: " + URL)
 
     except Exception as e:
+        print("🔴 Error:", e)
         await bot.send_message(chat_id=CHAT_ID, text="⚠️ Error al revisar turnos: " + str(e))
 
     finally:
