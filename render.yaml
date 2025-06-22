@@ -1,7 +1,0 @@
-services:
-  - type: cron
-    name: buscar-turno
-    env: python
-    schedule: "*/30 * * * *"
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python main.py"
