@@ -36,7 +36,7 @@ try:
 
     # Revisar si hay turnos
     if "No hay horas disponibles" not in driver.page_source:
-        bot.send_message(chat_id=CHAT_ID, text="✅ ¡Turno disponible! Revisá: " + URL)
+        bot.send_message(chat_id=CHAT_ID, text="🇪🇸 ¡Turno disponible! Revisá: " + URL)
 
 except Exception as e:
     bot.send_message(chat_id=CHAT_ID, text="⚠️ Error al revisar turnos: " + str(e))
