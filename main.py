@@ -1,8 +1,10 @@
-import asyncio
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import NoAlertPresentException
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.common.exceptions import NoAlertPresentException, NoSuchElementException
+from webdriver_manager.chrome import ChromeDriverManager
+import asyncio
 from telegram import Bot
 import time
 
@@ -18,7 +20,7 @@ options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-driver = webdriver.Chrome(options=options)
+driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
 
 async def main():
     try:
@@ -26,17 +28,21 @@ async def main():
         driver.get(URL)
         time.sleep(3)
 
-        print("🟡 Aceptando alerta...")
         try:
+            print("🟡 Aceptando alerta...")
             alert = driver.switch_to.alert
             alert.accept()
             time.sleep(2)
         except NoAlertPresentException:
-            print("🔵 No apareció ninguna alerta.")
+            print("🔘 No hay alerta para aceptar")
 
-        continuar = driver.find_element(By.ID, "idCaptchaButton")
-        continuar.click()
-        time.sleep(5)
+        try:
+            continuar = driver.find_element(By.ID, "idCaptchaButton")
+            continuar.click()
+            time.sleep(5)
+        except NoSuchElementException:
+            await bot.send_message(chat_id=CHAT_ID, text="⚠️ No se encontró el botón de continuar (idCaptchaButton)")
+            return
 
         await bot.send_message(chat_id=CHAT_ID, text="🔁 Bot ejecutado correctamente. Revisando turnos...")
 
