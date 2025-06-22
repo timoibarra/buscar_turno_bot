@@ -3,7 +3,7 @@ services:
     name: buscar-turno
     env: python
     schedule: "*/30 * * * *"
-    buildCommand: ""
+    buildCommand: "pip install -r requirements.txt"
     startCommand: "python main.py"
 
 pythonVersion: 3.11
