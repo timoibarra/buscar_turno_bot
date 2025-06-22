@@ -2,10 +2,10 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-import asyncio
 from telegram import Bot
-import traceback
 import time
 
 # CONFIG
@@ -15,48 +15,51 @@ CHAT_ID = "7619836951"
 
 bot = Bot(token=BOT_TOKEN)
 
-async def revisar_turnos():
-    options = Options()
-    options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
+try:
+    print("🟡 Abriendo sitio...")
+    driver.get(URL)
+    time.sleep(2)
+
+    # Aceptar popup si aparece
     try:
-        print("🟡 Abriendo sitio...")
-        driver.get(URL)
-        time.sleep(3)
-
+        WebDriverWait(driver, 5).until(EC.alert_is_present())
+        alert = driver.switch_to.alert
+        alert.accept()
         print("🟡 Aceptando alerta...")
-        try:
-            alert = driver.switch_to.alert
-            alert.accept()
-            time.sleep(2)
-        except:
-            print("🔵 No apareció alerta (posiblemente ya fue aceptada automáticamente)")
+    except:
+        print("🟢 No había alerta.")
 
-        print("🟡 Buscando botón de continuar...")
-        try:
-            continuar = driver.find_element(By.ID, "idCaptchaButton")
-            continuar.click()
-            time.sleep(5)
-        except:
-            await bot.send_message(chat_id=CHAT_ID, text="⚠️ No se encontró el botón de continuar (`idCaptchaButton`)")
-            return
-
-        await bot.send_message(chat_id=CHAT_ID, text="🔁 Bot ejecutado correctamente. Revisando turnos...")
-
-        if "No hay horas disponibles" not in driver.page_source:
-            await bot.send_message(chat_id=CHAT_ID, text="✅ ¡Turno disponible! Revisá: " + URL)
-
-    except Exception as e:
-        error_details = traceback.format_exc()
-        print("🔴 Error:", error_details)
-        await bot.send_message(chat_id=CHAT_ID, text="⚠️ Error al revisar turnos:\n" + error_details)
-
-    finally:
+    # Esperar a que el botón esté presente
+    try:
+        continuar = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "idCaptchaButton"))
+        )
+        continuar.click()
+        print("🟢 Botón 'Continuar' clickeado.")
+    except:
+        print("🔴 Botón no encontrado.")
+        bot.send_message(chat_id=CHAT_ID, text="⚠️ No se encontró el botón de continuar (`idCaptchaButton`)")
         driver.quit()
+        exit()
 
-if __name__ == "__main__":
-    asyncio.run(revisar_turnos())
+    time.sleep(4)
+
+    # Notificación de funcionamiento
+    bot.send_message(chat_id=CHAT_ID, text="🔁 Bot ejecutado correctamente. Revisando turnos...")
+
+    # Verificar disponibilidad
+    if "No hay horas disponibles" not in driver.page_source:
+        bot.send_message(chat_id=CHAT_ID, text="✅ ¡Turno disponible! Revisá: " + URL)
+
+except Exception as e:
+    bot.send_message(chat_id=CHAT_ID, text="⚠️ Error al revisar turnos: " + str(e))
+
+finally:
+    driver.quit()
